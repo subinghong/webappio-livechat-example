@@ -1,21 +1,19 @@
-FROM vm/ubuntu:18.04
 
-# install docker-ce (from tutorial for ubuntu)
-RUN apt-get update && \
-    apt-get install apt-transport-https ca-certificates curl software-properties-common && \
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
-    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable" && \
-    apt-get update && \
-    apt install docker-ce
+# Set the Framework (Base Image) for the Virtual Machine
+FROM webapp.io/docker:20.10
 
-# install docker compose
-RUN curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && \
-    chmod +x /usr/local/bin/docker-compose
+# Install python
+RUN apt-get update && apt-get install python3
 
-# copy the root (i.e., repository root) to /root in the runner
-COPY / /root
+# You could also install & start a database:
+# RUN apt-get update && apt-get install postgresql
 
-RUN REPEATABLE docker-compose up -d --build --force-recreate --remove-orphans && sleep 5
+# This line copies the repository to /root in the runner
+COPY . .
+RUN ls
 
-EXPOSE WEBSITE localhost:8000
-
+# Expose the webserver in the staging server as a secure link.
+# Whenever someone clicks the link, we'll load this staging server and forward
+# their requests to it.
+RUN BACKGROUND python3 -m http.server 80
+EXPOSE WEBSITE http://localhost:80
